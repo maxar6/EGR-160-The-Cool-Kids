@@ -56,7 +56,6 @@ void setup(){
 // the loop function runs over and over again forever
 void loop() {
 	securityCheck();
-	soundAlarm(true);
 }
 
 void securityCheck()
