@@ -25,13 +25,13 @@ LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 const byte ROWS = 4;
 const byte COLS = 4;
 char keys[ROWS][COLS] = { // Define the Keymap
-	{'1','2','3','A' }
+	{ '1','2','3','A' }
 	,
-	{'4','5','6','B' }
+	{ '4','5','6','B' }
 	,
-	{'7','8','9','C' }
+	{ '7','8','9','C' }
 	,
-	{'*','0','#','D' }
+	{ '*','0','#','D' }
 };
 byte rowPins[ROWS] = { 23, 25, 27, 29 };
 byte colPins[COLS] = { 33, 34, 35, 36 };
@@ -39,7 +39,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 
 // the setup function runs once when you press reset or power the board
-void setup(){
+void setup() {
 	pinMode(switch1, INPUT);
 	pinMode(switch2, INPUT);
 	pinMode(buzzer, OUTPUT);
@@ -68,8 +68,8 @@ void securityCheck()
 
 void soundAlarm(bool buzzerState)
 {
-	if(buzzerState)
-	{ 
+	if (buzzerState)
+	{
 		digitalWrite(buzzer, HIGH);
 	}
 	else
