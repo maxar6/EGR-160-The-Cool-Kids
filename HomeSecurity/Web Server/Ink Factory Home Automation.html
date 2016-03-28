@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- saved from url=(0219)https://02045031201878175211.googlegroups.com/attach/ac87eb2f6f881303/index.html?part=0.1&view=1&vt=ANaJVrGPafz1aBNPx0v1mb3x6B_exXu4FYp0exTh9c5JuwNwC2NkLf0qEEKbR4yYtoX8ccik4piV5uFqKIPQeak63FJT7esgtKbKNk2axnErU3tCvCdvEeE -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body background="./Ink Factory Home Automation_files/background.png" <head="">
+
+<meta name="viewport" content="height = device-height, width= device-width, user-scalable = yes"> 
+
+<title>Ink Factory Home Automation</title>
+
+<script type="text/javascript" src="./Ink Factory Home Automation_files/webiopi.js"></script>
+<script type="text/javascript">
+webiopi().ready(function() {
+$("#R1ON").mousedown(function(event){
+webiopi().Serial("serial0").write("aaaaaa");
+return false;
+});
+$("#R1OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("bbbbbb");
+return false;
+});
+$("#R2ON").mousedown(function(event){
+webiopi().Serial("serial0").write("cccccc");
+return false;
+});
+$("#R2OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("dddddd");
+return false;
+});
+$("#R3ON").mousedown(function(event){
+webiopi().Serial("serial0").write("eeeeee");
+return false;
+});
+$("#R3OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("ffffff");
+return false;
+});
+$("#B1ON").mousedown(function(event){
+webiopi().Serial("serial0").write("gggggg");
+return false;
+});
+$("#B1OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("hhhhhh");
+return false;
+});
+$("#B2ON").mousedown(function(event){
+webiopi().Serial("serial0").write("iiiiii");
+return false;
+});
+$("#B2OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("jjjjjj");
+return false;
+});
+$("#B3ON").mousedown(function(event){
+webiopi().Serial("serial0").write("kkkkkk");
+return false;
+});
+$("#B3OFF").mousedown(function(event){
+webiopi().Serial("serial0").write("llllll");
+return false;
+});
+$("#NIGHT").mousedown(function(event){
+webiopi().Serial("serial0").write("zzzzzz");
+return false;
+});
+$("#xxxxx").mousedown(function(event){
+webiopi().Serial("serial0").write("xxxxxx");
+return false;
+});
+$("#inputText").keyup(function(event){
+if(event.keyCode == 13){
+sendData();
+}
+});
+$.get("/devices/*", function(data) {
+var devices = $("#devices");
+var added = false;
+for (i in data) {
+if (data[i].type=="Serial") {
+added = true;
+devices.append($("<option>" + data[i].name + "</option>"))
+}
+}
+if (added) {
+readData();
+}
+});
+});
+function readData() {
+webiopi().Serial($("#devices").val()).read(function(data) {
+if (data.length > 0) {
+var d = $("#output").text() + data;
+$("#output").text(d);
+}
+});
+setTimeout(readData, 500);
+}
+function sendData() {
+var data = $("#inputText").val();
+webiopi().Serial($("#devices").val()).write(data);
+$("#inputText").val("");
+}
+function deviceChanged() {
+$("#output").text("");
+}
+
+</script>
+
+<style type="text/css">
+#inputText {
+width: 550px;
+}
+</style>
+
+
+
+<h1>HOME</h1>
+<h2>Light Control</h2>
+<p>
+</p>
+<a href="https://02045031201878175211.googlegroups.com/attach/ac87eb2f6f881303/temp.html">Tempurature Monitor</a> 
+
+
+<p>
+<span>Christmas Tree  </span> <input id="R1ON" type="button" value="ON"><input id="R1OFF" type="button" value="OFF">
+</p>
+<p>
+<span>Outside Lights</span> <input id="R2ON" type="button" value="ON"><input id="R2OFF" type="button" value="OFF">
+</p>
+<p>
+<span>Kichen Lights</span> <input id="R3ON" type="button" value="ON"><input id="R3OFF" type="button" value="OFF">
+</p>
+<p>
+<span>Living Room  Light</span> <input id="B1ON" type="button" value="ON"><input id="B1OFF" type="button" value="OFF">
+</p>
+<p>
+<span>Wine Rack</span> <input id="B2ON" type="button" value="ON"><input id="B2OFF" type="button" value="OFF">
+</p>
+<p>
+<span>B3</span> <input id="B3ON" type="button" value="ON"><input id="B3OFF" type="button" value="OFF">
+</p>
+<p>
+<span>Bed Time Nighty Night </span> <input id="NIGHT" type="button" value="ALL OFF">
+</p>
+<p>
+<span>Test Circuit </span> <input id="xxxxx" type="button" value="TEST">
+</p>
+
+
+
+</body></html>

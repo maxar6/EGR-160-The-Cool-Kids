@@ -1,0 +1,20 @@
+hi,
+
+this is my index.html. it has a array of buttons that send out serials to a 
+piaxe cpu and then a 433mhx transmitter.
+
+some of the code has been copyied from the web somewhere and ive modified 
+it a little. also sometimes the buttons dont display correctly on a andriod 
+tab / phones, havnt manage to figure this out yet.
+
+hope its of some help
+
+stu
+
+On Monday, 30 December 2013 14:08:33 UTC, Niranjan Arya wrote:
+
+>
+> Hey any one can guide me how to use webiopi serial communication. 
+>
+> I am really thankful to him.
+>
