@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>Home Security</title>
+	<title>WebIOPi | Serial Monitor</title>
 	<script type="text/javascript" src="/webiopi.js"></script>
 	<script type="text/javascript">
 	webiopi().ready(function() {
@@ -23,14 +23,6 @@
 			if (added) {
 				readData();
 			}
-		});
-		$("#R1ON").mousedown(function(event){
-		webiopi().Serial("uno").write("arm");
-		return false;
-		});
-		$("#R1OFF").mousedown(function(event){
-		webiopi().Serial("uno").write("disarm");
-		return false;
 		});
 	});
 	
@@ -62,15 +54,10 @@
 	</style>
 </head>
 <body>
-<center><h1>Home Security</h1></center>
-<body bgcolor="80e5ff">
-<h3><span>System : </span></h3><select id="devices" onchange="deviceChanged()"></select><br/>
-<!--<span>Output : </span><input id="inputText" type="text"/>-->
-<p>
-<h3><span>Arm System</span></h3> <input id="R1ON" type="button" value="ON">
-</p>
-<p>
-<h3><span>Disarm System</span></h3> <input id="R1OFF" type="button" value="OFF">
-</p>
+<h1>Serial Monitor</h1>
+<span>Serial device : </span><select id="devices" onchange="deviceChanged()"></select><br/>
+<span>Input : </span><br/>
+<textarea id="output" rows="30" cols="100" disabled="disabled"></textarea><br/>
+<span>Output : </span><input id="inputText" type="text"/>
 </body>
 </html>

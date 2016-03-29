@@ -18,7 +18,7 @@ int RGB_Blue = 10;
 int motion1 = 12;
 int motion2 = 13;
 
-bool zone1, zone2, zone3, zone4;
+bool zone1, zone2, zone3, zone4, armed;
 
 LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
@@ -37,6 +37,8 @@ byte rowPins[ROWS] = { 23, 25, 27, 29 };
 byte colPins[COLS] = { 33, 34, 35, 36 };
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
+//setting up the string for sending data back and forth between the Arduino and Pi
+String msgRecieve, msgSend, m_msgSend;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -55,15 +57,31 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
-	securityCheck();
+	if (recieveMessage() = "arm")
+	{
+		writeDisplay("ARMED", "Enter Pin to Un-Arm");
+		armed = true;
+	}
+	sendMessage("armed");
+	if (securityCheck() && armed) soundAlarm(true);
+	else soundAlarm(false);h
+
 }
 
-void securityCheck()
+bool securityCheck()
 {
 	zone1 = digitalRead(switch1);
 	zone2 = digitalRead(switch2);
 	zone3 = digitalRead(motion1);
 	zone4 = digitalRead(motion2);
+	if (zone1 || zone2 || zone3 || zone4)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void soundAlarm(bool buzzerState)
@@ -76,4 +94,29 @@ void soundAlarm(bool buzzerState)
 	{
 		digitalWrite(buzzer, LOW);
 	}
+}
+
+String recieveMessage()
+{
+	msgRecieve = "";
+	if (Serial.available())
+	{
+		msgRecieve = Serial.readString();
+	}
+	return msgRecieve;
+}
+
+void sendMessage(String msgSend)
+{
+	Serial.println(msgSend);
+}
+
+void checkKeypad()
+{
+	//no clue what to put here yet on how to check the keypad
+}
+
+void writeDisplay(String displayMsg1, String displayMsg2)
+{
+	//This will print whatever we want onto the display
 }
