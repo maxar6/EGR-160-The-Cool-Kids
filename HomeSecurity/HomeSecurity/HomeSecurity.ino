@@ -1,6 +1,7 @@
 #include <servo.h>
 #include <LiquidCrystal.h>
 #include <Keypad.h>
+#include <Password.h>
 
 //LCD RS pin to digital pin 22
 //* LCD Enable pin to digital pin 24
@@ -12,9 +13,9 @@
 int switch1 = 5;
 int switch2 = 6;
 int buzzer = 2;
-int RGB_Red = 8;
-int RGB_Green = 9;
-int RGB_Blue = 10;
+int ledGreen = 8;
+int ledYellow = 9;
+int ledRed = 10;
 int motion1 = 12;
 int motion2 = 13;
 
@@ -40,32 +41,63 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 //setting up the string for sending data back and forth between the Arduino and Pi
 String msgRecieve, msgSend, m_msgSend;
 
+//This sets up the password for the system
+Password password = Password("1875");
+int passwordCharacters = 0;
+bool pinCorrect = false;
+
 // the setup function runs once when you press reset or power the board
 void setup() {
 	pinMode(switch1, INPUT);
 	pinMode(switch2, INPUT);
 	pinMode(buzzer, OUTPUT);
-	pinMode(RGB_Red, OUTPUT);
-	pinMode(RGB_Green, OUTPUT);
-	pinMode(RGB_Blue, OUTPUT);
+	pinMode(ledGreen, OUTPUT);
+	pinMode(ledYellow, OUTPUT);
+	pinMode(ledRed, OUTPUT);
 	pinMode(motion1, INPUT);
 	pinMode(motion2, INPUT);
 	lcd.begin(16, 2);
 
 	Serial.begin(9600);
+
+	keypad.addEventListener(keypadEvent);
+	
+	armed = false;
 }
 
 // the loop function runs over and over again forever
 void loop() {
-	if (recieveMessage() = "arm")
+	if (recieveMessage() == "arm" || pinCorrect)
 	{
-		writeDisplay("ARMED", "Enter Pin to Un-Arm");
+		lcd.clear();
+		password.reset();
+		writeDisplay("ARMED Enter Pin to Un-Arm", "Pin:");
 		armed = true;
+		sendMessage("armed");
+		digitalWrite(ledRed, HIGH);
+		digitalWrite(ledGreen, LOW);
 	}
-	sendMessage("armed");
-	if (securityCheck() && armed) soundAlarm(true);
-	else soundAlarm(false);h
+	else if (recieveMessage() == "disarm" || pinCorrect)
+	{
+		lcd.clear();
+		password.reset();
+		writeDisplay("DISARMED Enter Pin to Arm", "Pin:");
+		armed = false;
+		sendMessage("disarmed");
+		digitalWrite(ledRed, LOW);
+		digitalWrite(ledGreen, HIGH);
+	}
 
+	if (securityCheck() && armed)
+	{
+		soundAlarm(true);
+	}
+	else
+	{
+		soundAlarm(false);
+	}
+
+	
 }
 
 bool securityCheck()
@@ -102,8 +134,8 @@ String recieveMessage()
 	if (Serial.available())
 	{
 		msgRecieve = Serial.readString();
+		return msgRecieve;
 	}
-	return msgRecieve;
 }
 
 void sendMessage(String msgSend)
@@ -111,12 +143,67 @@ void sendMessage(String msgSend)
 	Serial.println(msgSend);
 }
 
-void checkKeypad()
-{
-	//no clue what to put here yet on how to check the keypad
-}
-
 void writeDisplay(String displayMsg1, String displayMsg2)
 {
 	//This will print whatever we want onto the display
+	lcd.autoscroll();
+	lcd.setCursor(0, 0);
+	lcd.print(displayMsg1);
+	lcd.setCursor(0, 1);
+	lcd.print(displayMsg2);
+}
+
+void keypadEvent(KeypadEvent key)
+{
+	//char keypressed = keypad.getKey();
+	switch (keypad.getState())
+	{
+	case PRESSED:
+		switch (key)
+		{
+		case '#':                 //# is to validate password 
+			passwordCheck();
+			break;
+		case '*':                 //* is to reset password attempt
+			password.reset();
+			pinClear();
+			break;
+		default:
+			password.append(key);
+			passwordCharacters++;
+			lcd.setCursor(passwordCharacters + 5, 0);
+			lcd.print("*");
+			break;
+		}
+		break;
+	}
+}
+
+void passwordCheck()
+{
+	if (password.evaluate())
+	{
+		pinCorrect = true;
+	}
+	else
+	{
+		pinCorrect = false;
+		digitalWrite(ledYellow, HIGH);
+		delay(100);
+		digitalWrite(ledYellow, LOW);
+		delay(100);
+		digitalWrite(ledYellow, HIGH);
+		delay(100);
+		digitalWrite(ledYellow, LOW);
+	}
+}
+
+void pinClear()
+{
+	for (passwordCharacters = 0; passwordCharacters < 16; passwordCharacters++) //Clears the stars from the screen if there is any
+	{
+		lcd.setCursor(passwordCharacters + 5, 0);
+		lcd.print("");
+	}
+	passwordCharacters = 0;
 }
