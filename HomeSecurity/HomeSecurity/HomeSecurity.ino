@@ -3,13 +3,16 @@
 #include <Keypad.h>
 #include <Password.h>
 
-//LCD RS pin to digital pin 22
-//* LCD Enable pin to digital pin 24
-//* LCD D4 pin to digital pin 26
-//* LCD D5 pin to digital pin 28
-//* LCD D6 pin to digital pin 30
-//* LCD D7 pin to digital pin 32
+/*
+ LCD RS pin to digital pin 22
+ LCD Enable pin to digital pin 24
+ LCD D4 pin to digital pin 26
+ LCD D5 pin to digital pin 28
+ LCD D6 pin to digital pin 30
+ LCD D7 pin to digital pin 32
+ */
 
+//This is all the DIO for the sensors
 int switch1 = 5;
 int switch2 = 6;
 int buzzer = 2;
@@ -17,13 +20,15 @@ int ledGreen = 8;
 int ledYellow = 9;
 int ledRed = 10;
 int motion1 = 12;
-int motion2 = 40;
 int LEDrelay = 13;
 
-bool zone1, zone2, zone3, zone4, armed;
+//This is all the different zones of the house
+bool zone1, zone2, zone3, zone4;
 
+//This sets up the display
 LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
+//This sets up the keypad
 const byte ROWS = 4;
 const byte COLS = 4;
 char keys[ROWS][COLS] = { // Define the Keymap
@@ -39,7 +44,7 @@ byte rowPins[ROWS] = { 23, 25, 27, 29 };
 byte colPins[COLS] = { 37, 34, 35, 36 };
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-//setting up the string for sending data back and forth between the Arduino and Pi
+//Setting up the string's for sending data back and forth between the Arduino and Pi
 String msgRecieve, msgSend, m_msgSend;
 
 //This sets up the password for the system
@@ -48,12 +53,14 @@ int passwordCharacters = 0;
 int _passwordCharacters = 0;
 bool pinCorrect = false;
 
-//this sets the default system state where 1 = disarmed, 2 = armeds, and 0 = idle state
+//This sets the default system state where 1 = disarmed, 2 = armeds, and 0 = idle state
 int systemState = 1;
+bool armed = false;
 bool triggered = false;
 bool messageDisplayed = false;
 
 void setup() {
+	//This sets up the the pins to inputs or outputs
 	pinMode(switch1, INPUT);
 	pinMode(switch2, INPUT);
 	pinMode(buzzer, OUTPUT);
@@ -61,17 +68,18 @@ void setup() {
 	pinMode(ledYellow, OUTPUT);
 	pinMode(ledRed, OUTPUT);
 	pinMode(motion1, INPUT);
-	pinMode(motion2, INPUT);
 	pinMode(LEDrelay, OUTPUT);
 
+	//This starts the display and sets its size
 	lcd.begin(16, 2);
 
+	//This starts the Serail connection to and from the board
 	Serial.begin(9600);
 
+	//This adds a event for the keypad when keys get pressed
 	keypad.addEventListener(keypadEvent);
-	
-	armed = false;
 
+	//This sets the default state for some of the outputs that need to be set
 	digitalWrite(buzzer, LOW);
 	digitalWrite(ledGreen, LOW);
 	digitalWrite(ledYellow, LOW);
@@ -79,17 +87,18 @@ void setup() {
 	digitalWrite(LEDrelay, LOW);
 }
 
-// the loop function runs over and over again forever
 void loop() {
+	//This check for any new Serial messages
 	recieveMessage();
 
+	//This set the char key to whatever the most recent keypress was and prints it out over Serial
 	char key = keypad.getKey();
 	if (key != NO_KEY)
 	{
 		Serial.println(key);
 	}
 
-	//this if group handles the arming and disarming of the system
+	//This if group handles the arming and disarming of the system by setting the system status
 	if(armed && pinCorrect)
 	{
 		systemState = 1;
@@ -142,12 +151,7 @@ void loop() {
 		}
 	}
 
-	if (securityCheck() && armed)
-	{
-		triggered = true;
-	}
-
-	if (triggered)
+	if ((securityCheck() && armed) || triggered)
 	{
 		soundAlarm(true);
 		if (messageDisplayed == false)
@@ -156,9 +160,9 @@ void loop() {
 			messageDisplayed = true;
 		}
 	}
-	Serial.println(digitalRead(motion1));
 }
 
+//This check to see if anything has been breached
 bool securityCheck()
 {
 	zone1 = digitalRead(switch1);
@@ -174,6 +178,7 @@ bool securityCheck()
 	}
 }
 
+//This sounds the alarm
 void soundAlarm(bool buzzerState)
 {
 	if (buzzerState)
@@ -193,7 +198,7 @@ void soundAlarm(bool buzzerState)
 	}
 }
 
-
+//This will recieve and available Serial messages
 void recieveMessage()
 {
 	msgRecieve = "";
@@ -203,16 +208,17 @@ void recieveMessage()
 	}
 }
 
+//This will send any message over Serial we want
 void sendMessage(String msgSend)
 {
 	Serial.println(msgSend);
 }
 
+//This is will print whatever we want on the display
 void writeDisplay(String displayMsg1, String displayMsg2)
 {
 	String _displayMsg1 = displayMsg1;
 	String _displayMsg2 = displayMsg2;
-	//This will print whatever we want onto the display
 	lcd.clear();
 	lcd.setCursor(0, 0);
 	lcd.print(_displayMsg1);
@@ -249,6 +255,7 @@ void keypadEvent(KeypadEvent key)
 	}
 }
 
+//This check the password inputed on the keypad
 void passwordCheck()
 {
 	if (password.evaluate())
@@ -269,6 +276,7 @@ void passwordCheck()
 	}
 }
 
+//This clears the star symbols from the screen for resetting the password
 void pinClear()
 {
 	for (_passwordCharacters = 0; _passwordCharacters < 16; _passwordCharacters++) //Clears the stars from the screen if there is any
