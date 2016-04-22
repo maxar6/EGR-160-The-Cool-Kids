@@ -1,9 +1,3 @@
-/*
-Automatic Garden Waterer and Datalogger
-
-Grady Hillhouse (March 2015)
-*/
-
 #include "DHT.h"
 #include <SPI.h>
 #include <Wire.h>
@@ -15,10 +9,12 @@ Grady Hillhouse (March 2015)
 #define ECHO_TO_SERIAL 1 //Sends datalogging to serial if 1, nothing if 0
 #define LOG_INTERVAL 36000 //milliseconds between entries (6 minutes = 360000)
 
+//This sets up the digital temperature sensor
 #define ONE_WIRE_BUS 3
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
+//This assigns all the different pins
 const int soilTempPin = 3; //analog 0
 const int soilMoisturePin = A0; //analog 1
 const int sunlightPin = A3; //analog 2
@@ -30,9 +26,11 @@ const int solenoidPin = 4; //digital 3
 const int wateringTime = 600000; //Set the watering time (10 min for a start, it can be changed later)
 const float wateringThreshold = 15; //Value below which the garden gets watered
 
+//This sets up the DHT sensor
 DHT dht(dhtPin, DHTTYPE); //this gets up the air temperature and humidity sensor
 RTC_DS1307 rtc; //this sets up the built in rtc of the SD card reader
 
+//This sets the default values for everything
 float soilTemp = 0; //Scaled value of soil temp (degrees F)
 float soilMoistureRaw = 0; //Raw analog input of soil moisture sensor (volts)
 float soilMoisture = 0; //Scaled value of volumetric water content in soil (percent)
@@ -54,36 +52,44 @@ Probably as low as you'd want = 20%
 Well watered = 50%
 Cup of water = 100%
 */
-
-void error(char *str) //this is a function for printing errors to the serial monitor
+void setup()
 {
-	Serial.print("error: ");
-	Serial.println(str);
-
-	// red LED indicates error
-	digitalWrite(LEDPinRed, HIGH);
-
-	while (1);
-}
-
-void setup() {
-
-	//Initialize serial connection
 	Serial.begin(9600); //Just for testing
 	Serial.println("Initializing SD card...");
 
+	setPins();
+	dht.begin();
+	startRTC();
+	startSDCard();
+	now = rtc.now();
+}
 
+void loop()
+{
+	//delay software
+	delay((LOG_INTERVAL - 1) - (millis() % LOG_INTERVAL));
+	startIndicator();
+	waterTodayReset();
+	now = rtc.now();
+	logTime();
+	collectData();
+	logData();
+	waterControl();
+	flushSD();
+}
+
+void setPins()
+{
 	pinMode(chipSelect, OUTPUT); //Pin for writing to SD card
 	pinMode(LEDPinGreen, OUTPUT); //LED green pint
 	pinMode(LEDPinRed, OUTPUT); //LED red pin
 	pinMode(solenoidPin, OUTPUT); //solenoid pin
 	digitalWrite(solenoidPin, LOW); //Make sure the valve is off
 	analogReference(EXTERNAL); //Sets the max voltage from analog inputs to whatever is connected to the Aref pin (should be 3.3v)
+}
 
-							   //Establish connection with DHT sensor
-	dht.begin();
-
-	//Establish connection with real time clock
+void startRTC()
+{
 	Wire.begin();
 	if (!rtc.begin()) {
 		logfile.println("RTC failed");
@@ -97,7 +103,10 @@ void setup() {
 		// following line sets the RTC to the date & time this sketch was compiled
 		rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 	}
+}
 
+void startSDCard()
+{
 	//Check if SD card is present and can be initialized
 	if (!SD.begin(chipSelect)) {
 		error("Card failed, or not present");
@@ -124,22 +133,10 @@ void setup() {
 
 	Serial.print("Logging to: ");
 	Serial.println(filename);
-
-
-	logfile.println("Unix Time (s),Date,Soil Temp (F),Air Temp (F),Soil Moisture Content (%),Relative Humidity (%),Heat Index (F),Sunlight Illumination (lux),Watering?");   //HEADER 
-#if ECHO_TO_SERIAL
-	Serial.println("Unix Time (s),Date,Soil Temp (F),Air Temp (F),Soil Moisture Content (%),Relative Humidity (%),Heat Index (F),Sunlight Illumination (lux),Watering?");
-#endif ECHO_TO_SERIAL// attempt to write out the header to the file
-
-	now = rtc.now();
-
 }
 
-void loop() {
-
-	//delay software
-	delay((LOG_INTERVAL - 1) - (millis() % LOG_INTERVAL));
-
+void startIndicator()
+{
 	//Three blinks means start of new cycle
 	digitalWrite(LEDPinGreen, HIGH);
 	delay(150);
@@ -152,14 +149,18 @@ void loop() {
 	digitalWrite(LEDPinGreen, HIGH);
 	delay(150);
 	digitalWrite(LEDPinGreen, LOW);
+}
 
+void waterTodayReset()
+{
 	//Reset wateredToday variable if it's a new day
 	if (!(now.day() == rtc.now().day())) {
 		wateredToday = false;
 	}
+}
 
-	now = rtc.now();
-
+void logTime()
+{
 	// log time
 	logfile.print(now.unixtime()); // seconds since 2000
 	logfile.print(",");
@@ -191,7 +192,10 @@ void loop() {
 	Serial.print(now.second(), DEC);
 	Serial.print(",");
 #endif //ECHO_TO_SERIAL
+}
 
+void collectData()
+{
 	//Collect Variables
 	sensors.requestTemperatures();
 	soilTemp = sensors.getTempFByIndex(0);
@@ -230,7 +234,10 @@ void loop() {
 	//This is a rough conversion that I tried to calibrate using a flashlight of a "known" brightness
 	sunlight = pow(((((150 * 3.3) / (analogRead(sunlightPin)*(3.3 / 1024))) - 150) / 70000), -1.25);
 	delay(20);
+}
 
+void logData()
+{
 	//Log variables
 	logfile.print(soilTemp);
 	logfile.print(",");
@@ -258,7 +265,10 @@ void loop() {
 	Serial.print(sunlight);
 	Serial.print(",");
 #endif
+}
 
+void waterControl()
+{
 	if ((soilMoisture < wateringThreshold) && (now.hour() > 19) && (now.hour() < 22) && (wateredToday = false)) {
 		//water the garden
 		digitalWrite(solenoidPin, HIGH);
@@ -279,13 +289,11 @@ void loop() {
 		Serial.print("FALSE");
 #endif
 	}
-
-	logfile.println();
-#if ECHO_TO_SERIAL
-	Serial.println();
-#endif
 	delay(50);
+}
 
+void flushSD()
+{
 	//Write to SD card
 	logfile.flush();
 	delay(5000);
