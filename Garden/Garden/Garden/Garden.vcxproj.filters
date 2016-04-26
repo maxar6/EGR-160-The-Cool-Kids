@@ -16,7 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Garden.ino" />
-    <None Include="Garden2.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.Garden.vsarduino.h">

@@ -197,12 +197,13 @@ void loop() {
 	soilTemp = sensors.getTempFByIndex(0);
 	delay(20);
 
-	soilMoistureRaw = analogRead(soilMoisturePin)*(3.3 / 1024);
+	soilMoistureRaw = analogRead(soilMoisturePin)* (3.3/500);
 	delay(20);
 
 	//Volumetric Water Content is a piecewise function of the voltage from the sensor
 	//All that th following does is convert the voltage from the sensor into a percentage for soil moisture in the soil.
 	//Since voltage to soil moisture is not linear this is the quick and dirty way to get close to actual values.
+	
 	if (soilMoistureRaw < 1.1) {
 		soilMoisture = (10 * soilMoistureRaw) - 1;
 	}
@@ -228,7 +229,7 @@ void loop() {
 	heatIndex = dht.computeHeatIndex(airTemp, humidity);
 
 	//This is a rough conversion that I tried to calibrate using a flashlight of a "known" brightness
-	sunlight = pow(((((150 * 3.3) / (analogRead(sunlightPin)*(3.3 / 1024))) - 150) / 70000), -1.25);
+	sunlight = pow(((((150 * 3.3) / (analogRead(sunlightPin)*(3.3 / 255))) - 150) / 70000), -1.25);
 	delay(20);
 
 	//Log variables
